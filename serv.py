@@ -22,7 +22,7 @@ def recvAll(sock, numBytes):
             break
             recvBuff += tmpBuff
 
-            return recvBuff
+    return recvBuff
 
 
 def main(port):
@@ -31,6 +31,7 @@ def main(port):
     while True:
         print('Waiting for connection...')
 
+        # Accept client's connection
         clientSock, addr = welcomeSock.accept()
         print('Accepted connection from client: ', addr)
         print('\n')
