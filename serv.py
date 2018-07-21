@@ -2,11 +2,11 @@ import socket
 import sys
 import argparse
 
-def create_connection():
-    listenPort = 1234
+def create_connection(port):
+    listenPort = port
 
     welcomeSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    welcomeSock.bind(('', 0))
+    welcomeSock.bind(('', port))
     print('Ephemeral Port: ', welcomeSock.getsockname())[1]
     welcomeSock.listen(1)
     return welcomeSock
@@ -26,7 +26,7 @@ def recvAll(sock, numBytes):
 
 
 def main(port):
-    welcomeSock = create_connection()
+    welcomeSock = create_connection(port)
     while True:
         print('Waiting for connection...')
 
@@ -38,6 +38,8 @@ def main(port):
         recvBuff = ''
         fileSize = 0
         fileSizeBuff = ''
+
+        fileSizeBuff = recvAll(clientSock, 10)
         fileSize = int(fileSizeBuff)
 
         print('The file size is ', fileSize)
