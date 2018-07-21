@@ -26,6 +26,7 @@ def recvAll(sock, numBytes):
 
 
 def main(port):
+    print(type(port))
     welcomeSock = create_connection(port)
     while True:
         print('Waiting for connection...')
@@ -53,6 +54,6 @@ def main(port):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Socket Programming for FTP server side')
-    parser.add_argument('<PORT NUMBER>', type=int, help='server port number')
-    port = parser.parse_args()
-    main(port)
+    parser.add_argument('port', type=int, help='server port number', metavar='<PORT NUMBER>')
+    args = parser.parse_args()
+    main(args.port)
