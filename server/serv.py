@@ -15,13 +15,11 @@ def create_connection(port):
 def recvAll(sock, numBytes):
     recvBuff = ''
     tmpBuff = ''
-
     while len(recvBuff) < numBytes:
         tmpBuff = sock.recv(numBytes)
         if not tmpBuff:
             break
-            recvBuff += tmpBuff
-
+        recvBuff += tmpBuff
     return recvBuff
 
 
@@ -30,27 +28,29 @@ def main(port):
     while True:
         print('Waiting for connection...')
 
-        # Accept client's connection
         clientSock, addr = welcomeSock.accept()
         print('Accepted connection from client: ', addr)
         print('\n')
 
-        fileData = ''
-        recvBuff = ''
-        fileSize = 0
-        fileSizeBuff = ''
+        cmd_size_buff = ''
+        cmd_size = 0
+        client_cmd = ''
 
-        fileSizeBuff = recvAll(clientSock, 10)
-        # fileSize = int(fileSizeBuff)
+        cmd_size_buff = recvAll(clientSock, 10)
+        print(cmd_size_buff)
 
-        # print('The file size is ', fileSize)
+        cmd_size = int(cmd_size_buff)
+        print('The command size is ', cmd_size)
+        client_cmd = recvAll(clientSock, cmd_size)
+        print('command is ', client_cmd)
+        for line in commands.getstatusoutput(client_cmd):
+            print line
+        print('break')
 
-        # fileData = recvAll(clientSock, fileSize)
+        if client_cmd == 'quit':
+            break
 
-        # print('The file data is: ')
-        # print fileData
-
-        clientSock.close()
+    clientSock.close()
 
 
 if __name__ == '__main__':
