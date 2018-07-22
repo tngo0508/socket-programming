@@ -27,6 +27,9 @@ def main(host, port):
         while True:
             user_input = raw_input('ftp>')
 
+            if (user_input == 'ls'):
+                data_
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Socket Programming for FTP client side')
