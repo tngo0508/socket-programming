@@ -23,13 +23,27 @@ def recvAll(sock, numBytes):
     return recvBuff
 
 
-def add_header(data):
+def send(data, sock):
     if data:
         data_size_string = str(len(data))
         while len(data_size_string) < 10:
             data_size_string = '0' + data_size_string
-        return data_size_string
-    return None
+        fileData = data_size_string + data
+        numSent = 0
+        while len(fileData) > numSent:
+            numSent += sock.send(fileData[numSent:])
+        return numSent
+    return 0
+
+
+def create_data_connection(serverAddr, serverPort):
+    try:
+        connSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        connSock.connect((serverAddr, serverPort))
+        return connSock
+    except socket.error as msg:
+        print(msg)
+        return connSock is None
 
 
 def main(port):
@@ -52,11 +66,21 @@ def main(port):
         print('command is ', client_cmd)
 
         if client_cmd == 'ls':
+            port_size = 0
+            port_size_buff = ''
+            ephemeral_port = ''
+            ephemeral_port = recvAll(clientSock, 5)
+            print('emphemeral port', ephemeral_port)
+
             lines = ''
             for line in commands.getoutput(client_cmd):
                 lines += str(line)
             print(lines)
-            data = add_header(lines) + lines
+            print('addr', addr)
+            client_addr = socket.gethostbyaddr(str(addr[0]))
+            print(client_addr)
+            data_channel = create_data_connection(client_addr[0], int(ephemeral_port))
+            send(lines, data_channel)    
 
         if client_cmd == 'quit':
             break
