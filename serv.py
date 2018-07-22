@@ -1,13 +1,13 @@
 import socket
 import sys
 import argparse
+import commands
 
 def create_connection(port):
     listenPort = port
 
     welcomeSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     welcomeSock.bind(('', port))
-    print('Ephemeral Port: ', welcomeSock.getsockname())[1]
     welcomeSock.listen(1)
     return welcomeSock
 
@@ -26,7 +26,6 @@ def recvAll(sock, numBytes):
 
 
 def main(port):
-    print(type(port))
     welcomeSock = create_connection(port)
     while True:
         print('Waiting for connection...')
@@ -42,16 +41,18 @@ def main(port):
         fileSizeBuff = ''
 
         fileSizeBuff = recvAll(clientSock, 10)
-        fileSize = int(fileSizeBuff)
+        # fileSize = int(fileSizeBuff)
 
         print('The file size is ', fileSize)
 
-        fileData = recvAll(clientSock, fileSize)
+        # fileData = recvAll(clientSock, fileSize)
 
         print('The file data is: ')
         print fileData
 
-        clientsock.close()
+        print clientSock
+        clientSock.close()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Socket Programming for FTP server side')
