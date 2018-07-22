@@ -43,14 +43,13 @@ def main(port):
         fileSizeBuff = recvAll(clientSock, 10)
         # fileSize = int(fileSizeBuff)
 
-        print('The file size is ', fileSize)
+        # print('The file size is ', fileSize)
 
         # fileData = recvAll(clientSock, fileSize)
 
-        print('The file data is: ')
-        print fileData
+        # print('The file data is: ')
+        # print fileData
 
-        print clientSock
         clientSock.close()
 
 
