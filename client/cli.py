@@ -22,22 +22,36 @@ def create_control_connection(serverAddr, serverPort):
         return connSock is None
 
 
-def add_header(cmd):
+# def add_header(cmd):
+#     if cmd:
+#         cmd_size_string = str(len(cmd))
+#         while len(cmd_size_string) < 10:
+#             cmd_size_string = '0' + cmd_size_string
+#         return cmd_size_string
+#     return None
+#
+#
+# def send_command(cmd, data_socket):
+#     cmd_data = add_header(cmd) + cmd
+#     print(cmd_data)
+#     numSent = 0
+#     while len(cmd_data) > numSent:
+#         numSent += data_socket.send(cmd_data[numSent:])
+#     return numSent
+
+
+def send_command(cmd, data_socket):
     if cmd:
         cmd_size_string = str(len(cmd))
         while len(cmd_size_string) < 10:
             cmd_size_string = '0' + cmd_size_string
-        return cmd_size_string
-    return None
+        cmd_data = cmd_size_string + cmd
+        numSent = 0
+        while len(cmd_data) > numSent:
+            numSent += data_socket.send(cmd_data[numSent:])
+        return numSent
+    return 0
 
-
-def list_file_command(cmd, data_socket):
-    cmd_data = add_header(cmd) + cmd
-    print(cmd_data)
-    numSent = 0
-    while len(cmd_data) > numSent:
-        numSent += data_socket.send(cmd_data[numSent:])
-    return numSent
 
 
 def main(host, port):
@@ -48,7 +62,7 @@ def main(host, port):
 
             if user_input == 'ls':
                 data_channel = create_data_connection()
-                numSent = list_file_command(user_input, control_channel)
+                numSent = send_command(user_input, control_channel)
                 data_channel.close()
             if user_input == 'quit':
                 # control_channel.close()

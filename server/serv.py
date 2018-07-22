@@ -23,15 +23,22 @@ def recvAll(sock, numBytes):
     return recvBuff
 
 
+def add_header(data):
+    if data:
+        data_size_string = str(len(data))
+        while len(data_size_string) < 10:
+            data_size_string = '0' + data_size_string
+        return data_size_string
+    return None
+
+
 def main(port):
     welcomeSock = create_connection(port)
+    print('Waiting for connection...')
+    clientSock, addr = welcomeSock.accept()
+    print('Accepted connection from client: ', addr)
+    print('\n')
     while True:
-        print('Waiting for connection...')
-
-        clientSock, addr = welcomeSock.accept()
-        print('Accepted connection from client: ', addr)
-        print('\n')
-
         cmd_size_buff = ''
         cmd_size = 0
         client_cmd = ''
@@ -43,9 +50,13 @@ def main(port):
         print('The command size is ', cmd_size)
         client_cmd = recvAll(clientSock, cmd_size)
         print('command is ', client_cmd)
-        for line in commands.getstatusoutput(client_cmd):
-            print line
-        print('break')
+
+        if client_cmd == 'ls':
+            lines = ''
+            for line in commands.getoutput(client_cmd):
+                lines += str(line)
+            print(lines)
+            data = add_header(lines) + lines
 
         if client_cmd == 'quit':
             break
