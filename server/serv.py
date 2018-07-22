@@ -76,13 +76,13 @@ def main(port):
             for line in commands.getoutput(client_cmd):
                 lines += str(line)
             print(lines)
-            print('addr', addr)
+            # print('addr', addr)
             client_addr = socket.gethostbyaddr(str(addr[0]))
-            print(client_addr)
+            # print(client_addr)
             data_channel = create_data_connection(client_addr[0], int(ephemeral_port))
-            send(lines, data_channel)    
+            send(lines, data_channel)
 
-        if client_cmd == 'quit':
+        elif client_cmd == 'quit':
             break
 
     clientSock.close()

@@ -26,24 +26,6 @@ def create_control_connection(serverAddr, serverPort):
         return connSock is None
 
 
-# def add_header(cmd):
-#     if cmd:
-#         cmd_size_string = str(len(cmd))
-#         while len(cmd_size_string) < 10:
-#             cmd_size_string = '0' + cmd_size_string
-#         return cmd_size_string
-#     return None
-#
-#
-# def send_command(cmd, data_socket):
-#     cmd_data = add_header(cmd) + cmd
-#     print(cmd_data)
-#     numSent = 0
-#     while len(cmd_data) > numSent:
-#         numSent += data_socket.send(cmd_data[numSent:])
-#     return numSent
-
-
 def send_command(cmd, control_sock, data_sock=None):
     if cmd:
         cmd_size_string = str(len(cmd))
@@ -86,7 +68,8 @@ def main(host, port):
                 data = recvAll(data_sock, data_size)
                 print(data)
                 data_channel.close()
-            if user_input == 'quit':
+            elif user_input == 'quit':
+                numSent = send_command(user_input, control_channel)
                 # control_channel.close()
                 break
 
