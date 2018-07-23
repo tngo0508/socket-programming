@@ -65,14 +65,14 @@ def main(port):
         cmd_size = int(cmd_size_buff)
         print 'The command size is ', cmd_size, 'bytes'
         client_cmd = recvAll(clientSock, cmd_size)
-        print 'command is ', client_cmd
+        print 'executing command: ', client_cmd
 
         if 'quit' not in client_cmd:
             port_size = 0
             port_size_buff = ''
             ephemeral_port = ''
             ephemeral_port = recvAll(clientSock, 5)
-            print 'emphemeral port ', ephemeral_port
+            print 'emphemeral port: ', ephemeral_port
             data_channel = create_data_connection(client_addr[0], int(ephemeral_port))
 
         if client_cmd == 'ls':
@@ -81,10 +81,11 @@ def main(port):
                 lines += str(line)
             print lines
             if send(lines, data_channel):
-                print 'success'
+                print 'response success...\n'
             else:
-                print 'fail'
+                print 'response fail...\n'
         elif client_cmd == 'quit':
+            print 'quitting...'
             break
         elif len(client_cmd) > 2:
             file_name = client_cmd[4:]
@@ -98,9 +99,21 @@ def main(port):
 
                 if fileObj:
                     curr_dir = os.getcwd() + '/' + file_name
-                    print 'file size: ', os.path.getsize(curr_dir), 'bytes'
-                    fileData = fileObj.read()
-                    send(fileData, data_channel)
+                    req_file_size = os.path.getsize(curr_dir)
+                    # print 'file size: ', os.path.getsize(curr_dir), 'bytes'
+                    print 'file size: ', req_file_size, 'bytes'
+                    if req_file_size > 65536:
+                        msg = '[Errno 27] File too large. The allowed FTP receive window size is 65536 bytes'
+                        if send(msg, data_channel):
+                            print 'response success...\n'
+                        else:
+                            print 'response fail...\n'
+                    else:
+                        fileData = fileObj.read()
+                        if send(fileData, data_channel):
+                            print 'response success...\n'
+                        else:
+                            print 'response fail...\n'
 
     clientSock.close()
 

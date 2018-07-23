@@ -75,26 +75,16 @@ def main(host, port):
             user_input = raw_input('ftp> ')
 
             if user_input == 'ls':
-                # data_channel = create_data_connection()
-                # numSent = send_command(user_input, control_channel, data_channel)
-                # data_sock, addr = data_channel.accept()
-                # data_size_buff = recvAll(data_sock, 10)
-                # data_size = int(data_size_buff)
-                # data = recvAll(data_sock, data_size)
-                # print(data)
                 data = transfer(user_input, control_channel)
                 print data
-                # data_channel.close()
             elif user_input == 'quit':
                 numSent = send_command(user_input, control_channel)
                 break
             elif len(user_input) > 2:
-                # curr_dir = os.getcwd()
                 file_name = user_input[4:].strip()
                 if 'get' in user_input[:4]:
                     data = transfer(user_input, control_channel)
                     if not 'Errno' in data:
-                        # with open(os.path.join(curr_dir, file_name), 'wb') as file_to_write:
                         with open(file_name, 'wb') as file_to_write:
                             file_to_write.write(data)
                         print 'success'
