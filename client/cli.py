@@ -8,11 +8,11 @@ def create_data_connection():
     try:
         welcomeSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         welcomeSock.bind(('', 0))
-        print('ephemeral port: ', welcomeSock.getsockname()[1])
+        print 'ephemeral port: ', welcomeSock.getsockname()[1]
         welcomeSock.listen(1)
         return welcomeSock
     except socket.error as msg:
-        print(msg)
+        print msg
         return welcomeSock is None
 
 
@@ -22,7 +22,7 @@ def create_control_connection(serverAddr, serverPort):
         connSock.connect((serverAddr, serverPort))
         return connSock
     except socket.error as msg:
-        print(msg)
+        print msg
         return connSock is None
 
 
@@ -32,12 +32,13 @@ def send_command(cmd, control_sock, data_sock=None):
         while len(cmd_size_string) < 10:
             cmd_size_string = '0' + cmd_size_string
         cmd_data = cmd_size_string + cmd
-        if cmd == 'ls':
+        if not 'quit' in cmd:
             cmd_data += str(data_sock.getsockname()[1])
-        print(cmd_data)
+        print cmd_data
         numSent = 0
         while len(cmd_data) > numSent:
             numSent += control_sock.send(cmd_data[numSent:])
+        print 'Sent', numSent, 'bytes'
         return numSent
     return 0
 
@@ -53,6 +54,17 @@ def recvAll(sock, numBytes):
     return recvBuff
 
 
+def transfer(user_input, control_sock):
+    data_channel = create_data_connection()
+    numSent = send_command(user_input, control_sock, data_channel)
+    data_sock, addr = data_channel.accept()
+    data_size_buff = recvAll(data_sock, 10)
+    data_size = int(data_size_buff)
+    data = recvAll(data_sock, data_size)
+    data_channel.close()
+    return data
+
+
 def main(host, port):
     control_channel = create_control_connection(host, port)
     if (control_channel):
@@ -60,18 +72,31 @@ def main(host, port):
             user_input = raw_input('ftp> ')
 
             if user_input == 'ls':
-                data_channel = create_data_connection()
-                numSent = send_command(user_input, control_channel, data_channel)
-                data_sock, addr = data_channel.accept()
-                data_size_buff = recvAll(data_sock, 10)
-                data_size = int(data_size_buff)
-                data = recvAll(data_sock, data_size)
-                print(data)
-                data_channel.close()
+                # data_channel = create_data_connection()
+                # numSent = send_command(user_input, control_channel, data_channel)
+                # data_sock, addr = data_channel.accept()
+                # data_size_buff = recvAll(data_sock, 10)
+                # data_size = int(data_size_buff)
+                # data = recvAll(data_sock, data_size)
+                # print(data)
+                # data_channel.close()
+                data = transfer(user_input, control_channel)
+                print data
             elif user_input == 'quit':
                 numSent = send_command(user_input, control_channel)
-                # control_channel.close()
                 break
+            elif len(user_input) > 2:
+                curr_dir = os.getcwd()
+                file_name = user_input[4:]
+                if 'get' in user_input[:4]:
+                    data = transfer(user_input, control_channel)
+                    print '\n', data
+                    if data:
+                        with open(os.path.join(curr_dir, file_name), 'wb') as file_to_write:
+                            file_to_write.write(data)
+                        print 'success'
+                    else:
+                        print 'fail'
 
 
 if __name__ == '__main__':
