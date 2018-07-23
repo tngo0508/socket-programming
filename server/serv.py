@@ -2,6 +2,7 @@ import socket
 import sys
 import argparse
 import commands
+import os
 
 def create_connection(port):
     listenPort = port
@@ -45,17 +46,6 @@ def create_data_connection(serverAddr, serverPort):
         print msg
         return connSock is None
 
-def tranfer(data, client_addr, client_sock):
-    port_size = 0
-    port_size_buff = ''
-    ephemeral_port = ''
-    ephemeral_port = recvAll(client_sock, 5)
-    print 'emphemeral port ', ephemeral_port
-    data_channel = create_data_connection(client_addr[0], int(ephemeral_port))
-    if send(data, data_channel):
-        return True
-    return False
-
 
 def main(port):
     welcomeSock = create_connection(port)
@@ -70,29 +60,30 @@ def main(port):
         client_cmd = ''
 
         cmd_size_buff = recvAll(clientSock, 10)
-        print cmd_size_buff
+        print 'cmd_size_buff: ', cmd_size_buff
 
         cmd_size = int(cmd_size_buff)
         print 'The command size is ', cmd_size, 'bytes'
         client_cmd = recvAll(clientSock, cmd_size)
         print 'command is ', client_cmd
 
+        if 'quit' not in client_cmd:
+            port_size = 0
+            port_size_buff = ''
+            ephemeral_port = ''
+            ephemeral_port = recvAll(clientSock, 5)
+            print 'emphemeral port ', ephemeral_port
+            data_channel = create_data_connection(client_addr[0], int(ephemeral_port))
+
         if client_cmd == 'ls':
             lines = ''
-            for line in commands.getoutput(client_cmd):
+            for line in commands.getoutput('ls'):
                 lines += str(line)
             print lines
-            if (tranfer(lines, client_addr, clientSock)):
+            if send(lines, data_channel):
                 print 'success'
             else:
                 print 'fail'
-            # port_size = 0
-            # port_size_buff = ''
-            # ephemeral_port = ''
-            # ephemeral_port = recvAll(clientSock, 5)
-            # print('emphemeral port', ephemeral_port)
-            # data_channel = create_data_connection(client_addr[0], int(ephemeral_port))
-            # send(lines, data_channel)
         elif client_cmd == 'quit':
             break
         elif len(client_cmd) > 2:
@@ -101,17 +92,15 @@ def main(port):
                 print 'Sending ', file_name, '...'
                 fileObj = None
                 try:
-                    fileObj = open(file_name, "r")
+                    fileObj = open(file_name, "rb")
                 except IOError as msg:
-                    tranfer(str(msg), client_addr, clientSock)
+                    send(str(msg), data_channel)
 
                 if fileObj:
-                    while True:
-                        fileData = fileObj.read(65536)
-                        if fileData:
-                            tranfer(fileData, client_addr, clientSock)
-                        else:
-                            break
+                    curr_dir = os.getcwd() + '/' + file_name
+                    print 'file size: ', os.path.getsize(curr_dir), 'bytes'
+                    fileData = fileObj.read()
+                    send(fileData, data_channel)
 
     clientSock.close()
 

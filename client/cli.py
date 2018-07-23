@@ -12,7 +12,7 @@ def create_data_connection():
         welcomeSock.listen(1)
         return welcomeSock
     except socket.error as msg:
-        print msg
+        print 'Socket error: ', msg
         return welcomeSock is None
 
 
@@ -22,7 +22,7 @@ def create_control_connection(serverAddr, serverPort):
         connSock.connect((serverAddr, serverPort))
         return connSock
     except socket.error as msg:
-        print msg
+        print 'Socket error: ', msg
         return connSock is None
 
 
@@ -34,7 +34,7 @@ def send_command(cmd, control_sock, data_sock=None):
         cmd_data = cmd_size_string + cmd
         if not 'quit' in cmd:
             cmd_data += str(data_sock.getsockname()[1])
-        print cmd_data
+        print 'Packet being sent: ', cmd_data
         numSent = 0
         while len(cmd_data) > numSent:
             numSent += control_sock.send(cmd_data[numSent:])
@@ -55,13 +55,16 @@ def recvAll(sock, numBytes):
 
 
 def transfer(user_input, control_sock):
+    print 'open tcp connection for data tranfering...'
     data_channel = create_data_connection()
     numSent = send_command(user_input, control_sock, data_channel)
     data_sock, addr = data_channel.accept()
     data_size_buff = recvAll(data_sock, 10)
+    # print str(data_size_buff), 'data size buff'
     data_size = int(data_size_buff)
     data = recvAll(data_sock, data_size)
     data_channel.close()
+    print 'close tcp connection for data tranfering...'
     return data
 
 
@@ -79,24 +82,25 @@ def main(host, port):
                 # data_size = int(data_size_buff)
                 # data = recvAll(data_sock, data_size)
                 # print(data)
-                # data_channel.close()
                 data = transfer(user_input, control_channel)
                 print data
+                # data_channel.close()
             elif user_input == 'quit':
                 numSent = send_command(user_input, control_channel)
                 break
             elif len(user_input) > 2:
-                curr_dir = os.getcwd()
-                file_name = user_input[4:]
+                # curr_dir = os.getcwd()
+                file_name = user_input[4:].strip()
                 if 'get' in user_input[:4]:
                     data = transfer(user_input, control_channel)
-                    print '\n', data
-                    if data:
-                        with open(os.path.join(curr_dir, file_name), 'wb') as file_to_write:
+                    if not 'Errno' in data:
+                        # with open(os.path.join(curr_dir, file_name), 'wb') as file_to_write:
+                        with open(file_name, 'wb') as file_to_write:
                             file_to_write.write(data)
                         print 'success'
                     else:
                         print 'fail'
+                        print data
 
 
 if __name__ == '__main__':
