@@ -6,7 +6,6 @@ import os
 
 def create_connection(port):
     listenPort = port
-
     welcomeSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     welcomeSock.bind(('', port))
     welcomeSock.listen(1)
@@ -37,9 +36,9 @@ def send(data, sock):
     return 0
 
 
-def create_data_connection(serverAddr, serverPort):
+def connect_to_data_channel(serverAddr, serverPort):
     try:
-        print 'open tcp connection for data tranfering...'
+        print 'open tcp connection for data transfering...'
         connSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connSock.connect((serverAddr, serverPort))
         return connSock
@@ -48,9 +47,11 @@ def create_data_connection(serverAddr, serverPort):
         return connSock is None
 
 
-def transfer(data_sock):
+def recv_from_client(data_sock):
     data_size_buff = recvAll(data_sock, 10)
     print 'data size buff: ', str(data_size_buff)
+    if int(data_size_buff) > 65536:
+        return None
     data_size = int(data_size_buff)
     data = recvAll(data_sock, data_size)
     return data
@@ -77,13 +78,13 @@ def main(port):
         print 'executing command: ', client_cmd
 
         # if 'quit' not in client_cmd:
-        if any(cmd in client_cmd for cmd in ['ls', 'get', 'put']):
+        if any(cmd in client_cmd for cmd in ['ls', 'get']):
             port_size = 0
             port_size_buff = ''
             ephemeral_port = ''
             ephemeral_port = recvAll(clientSock, 5)
             print 'emphemeral port: ', ephemeral_port
-            data_channel = create_data_connection(client_addr[0], int(ephemeral_port))
+            data_channel = connect_to_data_channel(client_addr[0], int(ephemeral_port))
 
         if client_cmd == 'ls':
             lines = ''
@@ -98,7 +99,7 @@ def main(port):
                 print 'response fail...\n'
         elif client_cmd == 'quit':
             send('server: ack quit', clientSock)
-            data = transfer(clientSock)
+            data = recv_from_client(clientSock)
             print data
             break
         elif len(client_cmd) > 2:
@@ -131,10 +132,12 @@ def main(port):
                             print 'response fail...\n'
             elif 'put' in client_cmd[:4]:
                 print 'Downloading ', file_name, '...'
-                send('ack', data_channel)
-                # data = transfer(data_channel)
-                if not 'Errno' in data:
-                    print 'break'
+                send('Server: ACK, prepare to receive', clientSock)
+                ephemeral_port = recv_from_client(clientSock)
+                data_channel = connect_to_data_channel(client_addr[0], int(ephemeral_port))
+                send('Server: connect to data channel', data_channel)
+                data = recv_from_client(data_channel)
+                if data:
                     with open(file_name, 'wb') as file_to_write:
                         file_to_write.write(data)
                         send('success!', data_channel)
@@ -143,6 +146,7 @@ def main(port):
                     print 'fail'
                     send('fail', data_channel)
                     print data
+                data_channel.close()
             else:
                 send('server: command not found', clientSock)
 

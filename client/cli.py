@@ -26,19 +26,19 @@ def create_control_connection(serverAddr, serverPort):
         return connSock is None
 
 
-def send(data, control_sock, data_sock=None):
+def send(data, sock, data_sock=None):
     if data:
         data_size_string = str(len(data))
         while len(data_size_string) < 10:
             data_size_string = '0' + data_size_string
         new_data = data_size_string + data
         #append the ephemeral_port at the end of the packet
-        if any(cmd in data for cmd in ['ls', 'get', 'put']):
+        if any(cmd in data for cmd in ['ls', 'get', 'put']) and data_sock:
             new_data += str(data_sock.getsockname()[1])
         print 'Packet being sent: ', new_data
         numSent = 0
         while len(new_data) > numSent:
-            numSent += control_sock.send(new_data[numSent:])
+            numSent += sock.send(new_data[numSent:])
         print 'Sent', numSent, 'bytes'
         return numSent
     return 0
@@ -55,7 +55,7 @@ def recvAll(sock, numBytes):
     return recvBuff
 
 
-def transfer(user_input, control_sock):
+def data_transfer(user_input, control_sock):
     print 'open tcp connection for data tranfering...'
     data_channel = create_data_connection()
     numSent = send(user_input, control_sock, data_channel)
@@ -83,7 +83,7 @@ def main(host, port):
             user_input = raw_input('ftp> ').strip()
 
             if user_input == 'ls':
-                data = transfer(user_input, control_channel)
+                data = data_transfer(user_input, control_channel)
                 sv_data = recv_from_control(control_channel)
                 print sv_data
                 print '\nlist files on server: \n'
@@ -97,7 +97,7 @@ def main(host, port):
             elif len(user_input) > 2:
                 file_name = user_input[4:].strip()
                 if 'get' in user_input[:4]:
-                    data = transfer(user_input, control_channel)
+                    data = data_transfer(user_input, control_channel)
                     if not 'Errno' in data:
                         with open(file_name, 'wb') as file_to_write:
                             file_to_write.write(data)
@@ -117,23 +117,28 @@ def main(host, port):
                         continue
                     curr_dir = os.getcwd() + '/' + file_name
                     sending_file_size = os.path.getsize(curr_dir)
-                    print 'sending file size: ', sending_file_size, ' bytes'
+                    print 'size of sending file: ', sending_file_size, ' bytes'
                     if sending_file_size > 65536:
-                        print '[Errno 27] File too large. Maximum size allowed to send is 65536 bytes'
+                        print '[Errno 27] File too large.'
+                        print 'Maximum size allowed to send is 65536 bytes'
                     else:
-                        fileData = fileObj.read()
-                        data = transfer(user_input, control_channel)
-                        if 'ack' in data:
-                            #TO DO: sending file
-                            print 'sending ', file_name, 'successfully!'
-                        else:
-                            print 'fail'
-                            print data
-                        # if not 'Errno' in data:
-                        #     print 'sending ', file_name, 'successfully!'
-                        # else:
-                        #     print 'fail'
-                        #     print data
+                        send(user_input, control_channel)
+                        sv_data = recv_from_control(control_channel)
+                        print sv_data
+                        print 'open tcp connection for data tranfering...'
+                        data_channel = create_data_connection()
+                        ephemeral_port = data_channel.getsockname()[1]
+                        send(str(ephemeral_port), control_channel)
+                        data_sock, addr = data_channel.accept()
+                        data = recv_from_control(data_sock)
+                        send('client: ACK', data_sock)
+                        print data
+                        if data_sock:
+                            fileData = fileObj.read()
+                            send(fileData, data_sock)
+                        data_channel.close()
+
+
                 else:
                     send(user_input, control_channel)
                     sv_data = recv_from_control(control_channel)
