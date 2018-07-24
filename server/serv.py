@@ -92,10 +92,10 @@ def main(port):
                 lines += str(line)
             print lines
             if send(lines, data_channel):
-                send('server: executed successfully', clientSock)
+                send('server: executed successfully...', clientSock)
                 print 'response success...\n'
             else:
-                send('server: cannot execute command', clientSock)
+                send('server: cannot execute command...', clientSock)
                 print 'response fail...\n'
         elif client_cmd == 'quit':
             send('server: ack quit', clientSock)
@@ -126,29 +126,29 @@ def main(port):
                     else:
                         fileData = fileObj.read()
                         if send(fileData, data_channel):
-                            send('server: executed successfully', clientSock)
+                            send('server: executed successfully...', clientSock)
                             print 'response success...\n'
                         else:
+                            send('server: cannot execute commmand...', clientSock)
                             print 'response fail...\n'
             elif 'put' in client_cmd[:4]:
                 print 'Downloading ', file_name, '...'
-                send('Server: ACK, prepare to receive', clientSock)
+                send('server: ACK, prepare to receive', clientSock)
                 ephemeral_port = recv_from_client(clientSock)
                 data_channel = connect_to_data_channel(client_addr[0], int(ephemeral_port))
-                send('Server: connect to data channel', data_channel)
                 data = recv_from_client(data_channel)
                 if data:
                     with open(file_name, 'wb') as file_to_write:
                         file_to_write.write(data)
-                        send('success!', data_channel)
+                        send('server: executed successfully...', data_channel)
                         print 'success'
                 else:
-                    print 'fail'
-                    send('fail', data_channel)
+                    print 'cannot execute command...'
+                    send('server: cannot execute command...', data_channel)
                     print data
                 data_channel.close()
             else:
-                send('server: command not found', clientSock)
+                send('server: command not found...', clientSock)
 
     clientSock.close()
 

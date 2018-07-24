@@ -80,6 +80,7 @@ def main(host, port):
     control_channel = create_control_connection(host, port)
     if control_channel:
         while True:
+            print '\n'
             user_input = raw_input('ftp> ').strip()
 
             if user_input == 'ls':
@@ -130,9 +131,6 @@ def main(host, port):
                         ephemeral_port = data_channel.getsockname()[1]
                         send(str(ephemeral_port), control_channel)
                         data_sock, addr = data_channel.accept()
-                        data = recv_from_control(data_sock)
-                        send('client: ACK', data_sock)
-                        print data
                         if data_sock:
                             fileData = fileObj.read()
                             send(fileData, data_sock)
