@@ -76,7 +76,8 @@ def main(port):
         client_cmd = recvAll(clientSock, cmd_size).strip()
         print 'executing command: ', client_cmd
 
-        if 'quit' not in client_cmd:
+        # if 'quit' not in client_cmd:
+        if any(cmd in client_cmd for cmd in ['ls', 'get', 'put']):
             port_size = 0
             port_size_buff = ''
             ephemeral_port = ''
@@ -128,7 +129,7 @@ def main(port):
                             print 'response success...\n'
                         else:
                             print 'response fail...\n'
-            if 'put' in client_cmd[:4]:
+            elif 'put' in client_cmd[:4]:
                 print 'Downloading ', file_name, '...'
                 send('ack', data_channel)
                 # data = transfer(data_channel)
@@ -142,9 +143,8 @@ def main(port):
                     print 'fail'
                     send('fail', data_channel)
                     print data
-        # else:
-        #     print 'break'
-        #     send('fail executing', clientSock)
+            else:
+                send('server: command not found', clientSock)
 
     clientSock.close()
 

@@ -33,7 +33,7 @@ def send(data, control_sock, data_sock=None):
             data_size_string = '0' + data_size_string
         new_data = data_size_string + data
         #append the ephemeral_port at the end of the packet
-        if 'quit' not in data:
+        if any(cmd in data for cmd in ['ls', 'get', 'put']):
             new_data += str(data_sock.getsockname()[1])
         print 'Packet being sent: ', new_data
         numSent = 0
@@ -109,7 +109,7 @@ def main(host, port):
                         sv_data = recv_from_control(control_channel)
                         print sv_data
                         # print 'fail'
-                if 'put' in user_input[:4]:
+                elif 'put' in user_input[:4]:
                     try:
                         fileObj = open(file_name, "rb")
                     except IOError as msg:
@@ -134,9 +134,10 @@ def main(host, port):
                         # else:
                         #     print 'fail'
                         #     print data
-            else:
-                data = recv_from_control(control_channel)
-                print data
+                else:
+                    send(user_input, control_channel)
+                    sv_data = recv_from_control(control_channel)
+                    print sv_data
 
     control_channel.close()
 
