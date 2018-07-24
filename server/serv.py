@@ -39,12 +39,21 @@ def send(data, sock):
 
 def create_data_connection(serverAddr, serverPort):
     try:
+        print 'open tcp connection for data tranfering...'
         connSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connSock.connect((serverAddr, serverPort))
         return connSock
     except socket.error as msg:
         print msg
         return connSock is None
+
+
+def transfer(data_sock):
+    data_size_buff = recvAll(data_sock, 10)
+    print 'data size buff: ', str(data_size_buff)
+    data_size = int(data_size_buff)
+    data = recvAll(data_sock, data_size)
+    return data
 
 
 def main(port):
@@ -64,7 +73,7 @@ def main(port):
 
         cmd_size = int(cmd_size_buff)
         print 'The command size is ', cmd_size, 'bytes'
-        client_cmd = recvAll(clientSock, cmd_size)
+        client_cmd = recvAll(clientSock, cmd_size).strip()
         print 'executing command: ', client_cmd
 
         if 'quit' not in client_cmd:
@@ -81,11 +90,15 @@ def main(port):
                 lines += str(line)
             print lines
             if send(lines, data_channel):
+                send('server: executed successfully', clientSock)
                 print 'response success...\n'
             else:
+                send('server: cannot execute command', clientSock)
                 print 'response fail...\n'
         elif client_cmd == 'quit':
-            print 'quitting...'
+            send('server: ack quit', clientSock)
+            data = transfer(clientSock)
+            print data
             break
         elif len(client_cmd) > 2:
             file_name = client_cmd[4:]
@@ -100,20 +113,38 @@ def main(port):
                 if fileObj:
                     curr_dir = os.getcwd() + '/' + file_name
                     req_file_size = os.path.getsize(curr_dir)
-                    # print 'file size: ', os.path.getsize(curr_dir), 'bytes'
                     print 'file size: ', req_file_size, 'bytes'
                     if req_file_size > 65536:
-                        msg = '[Errno 27] File too large. The allowed FTP receive window size is 65536 bytes'
+                        msg = 'server: [Errno 27] File too large.'
                         if send(msg, data_channel):
+                            send('server: The allowed FTP receive window size is 65536 bytes', clientSock)
                             print 'response success...\n'
                         else:
                             print 'response fail...\n'
                     else:
                         fileData = fileObj.read()
                         if send(fileData, data_channel):
+                            send('server: executed successfully', clientSock)
                             print 'response success...\n'
                         else:
                             print 'response fail...\n'
+            if 'put' in client_cmd[:4]:
+                print 'Downloading ', file_name, '...'
+                send('ack', data_channel)
+                # data = transfer(data_channel)
+                if not 'Errno' in data:
+                    print 'break'
+                    with open(file_name, 'wb') as file_to_write:
+                        file_to_write.write(data)
+                        send('success!', data_channel)
+                        print 'success'
+                else:
+                    print 'fail'
+                    send('fail', data_channel)
+                    print data
+        # else:
+        #     print 'break'
+        #     send('fail executing', clientSock)
 
     clientSock.close()
 
