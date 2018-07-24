@@ -61,7 +61,6 @@ def data_transfer(user_input, control_sock):
     numSent = send(user_input, control_sock, data_channel)
     data_sock, addr = data_channel.accept()
     data_size_buff = recvAll(data_sock, 10)
-    # print str(data_size_buff), 'data size buff'
     data_size = int(data_size_buff)
     data = recvAll(data_sock, data_size)
     data_channel.close()
@@ -102,14 +101,8 @@ def main(host, port):
                     if not 'Errno' in data:
                         with open(file_name, 'wb') as file_to_write:
                             file_to_write.write(data)
-                        sv_data = recv_from_control(control_channel)
-                        print sv_data
-                        # print 'success'
-                    else:
-                        print data
-                        sv_data = recv_from_control(control_channel)
-                        print sv_data
-                        # print 'fail'
+                    sv_data = recv_from_control(control_channel)
+                    print sv_data
                 elif 'put' in user_input[:4]:
                     try:
                         fileObj = open(file_name, "rb")

@@ -104,12 +104,13 @@ def main(port):
         elif len(client_cmd) > 2:
             file_name = client_cmd[4:]
             if 'get' in client_cmd[:4]:
-                print 'Sending ', file_name, '...'
+                print 'Sending ', file_name
                 fileObj = None
                 try:
                     fileObj = open(file_name, "rb")
                 except IOError as msg:
                     send(str(msg), data_channel)
+                    send(str(msg), clientSock)
 
                 if fileObj:
                     curr_dir = os.getcwd() + '/' + file_name
@@ -118,10 +119,10 @@ def main(port):
                     if req_file_size > 65536:
                         msg = 'server: [Errno 27] File too large.'
                         if send(msg, data_channel):
-                            send('server: The allowed FTP receive window size is 65536 bytes', clientSock)
                             print 'response success...\n'
                         else:
                             print 'response fail...\n'
+                        send(msg, clientSock)
                     else:
                         fileData = fileObj.read()
                         if send(fileData, data_channel):
