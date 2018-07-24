@@ -77,7 +77,6 @@ def main(port):
         client_cmd = recvAll(clientSock, cmd_size).strip()
         print 'executing command: ', client_cmd
 
-        # if 'quit' not in client_cmd:
         if any(cmd in client_cmd for cmd in ['ls', 'get']):
             port_size = 0
             port_size_buff = ''
