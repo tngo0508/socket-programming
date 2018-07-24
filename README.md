@@ -64,5 +64,16 @@ optional arguments:
 ```
 **Example**
 ```
-$ python cli.py 1234
+$ python cli.py localhost 1234
+```
+Or if you are using _ecs.fullerton.edu_. Type the following in your terminal
+```
+$ python cli.py ecs.fullerton.edu <PORT NUMBER>
+```
+Type one of the following commands to use FTP socket:
+```
+ftp> get <file name> (downloads file <file name> from the server)
+ftp> put <filename> (uploads file <file name> to the server)
+ftp> ls (lists files on the server)
+ftp> quit (disconnects from the server and exits)
 ```
