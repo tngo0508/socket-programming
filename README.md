@@ -44,7 +44,7 @@ Last login: Tue Jul 24 01:22:30 2018 from 76.89.212.85
 ```
 ### client
 - Make sure to run _serv.py_ before _cli.py_
-- Copy and paste _cli.py_ into your server's machine
+- Copy and paste _cli.py_ into your server's machine. _cli.py_ and _serv.py_ need to be placed on different directories.
 - Type the following command to get help instruction
 ```
 $ python cli.py -h
