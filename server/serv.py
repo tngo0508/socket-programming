@@ -14,8 +14,6 @@ def create_connection(port):
         a welcome socket for control channel. Server will use this Socket
         to send status/error and receive commands from client
     """
-    listenPort = port
-
     # Create a welcome socket.
     welcomeSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -128,6 +126,15 @@ def recv_from_client(sock):
 
 
 def recv_ephemeral_port(sock, serverAddr):
+    """Receive ephemeral port for data connection from client
+
+    Args:
+        sock: the socket from which control channel uses
+        serverAddr: the client's IP address
+
+    Returns:
+        The ephemeral port used in data connection for tranfering data
+    """
     port_size = 0
     port_size_buff = ''
     ephemeral_port = ''
@@ -165,9 +172,13 @@ def main(port):
         print 'executing command: ', client_cmd
 
         if client_cmd == 'ls':
+
+            # Extract ephemeral port from client's packet
             ephemeral_port = recv_ephemeral_port(clientSock,client_addr[0])
+
+            # Connect to data channel
             data_channel = connect_to_data_channel(client_addr[0], int(ephemeral_port))
-            lines = ''
+            lines = '' # Get output after executing command `ls`
             for line in commands.getoutput('ls -l'):
                 lines += str(line)
             print lines
@@ -178,14 +189,22 @@ def main(port):
                 send('server: cannot execute command...', clientSock)
                 print 'response fail...\n'
         elif client_cmd == 'quit':
+
+            # Send acknowledged packet back to client
             send('server: ack quit', clientSock)
+
+            # Get finished packet from client
             data = recv_from_client(clientSock)
             print data
             break
         elif len(client_cmd) > 2:
-            file_name = client_cmd[4:]
+            file_name = client_cmd[4:] # Extract file's name
             if 'get' in client_cmd[:4]:
+
+                # Extract ephemeral port from client's packet
                 ephemeral_port = recv_ephemeral_port(clientSock, client_addr[0])
+
+                # Connect to data channel
                 data_channel = connect_to_data_channel(client_addr[0], int(ephemeral_port))
                 print 'Sending ', file_name
                 fileObj = None
@@ -196,9 +215,13 @@ def main(port):
                     send(str(msg), clientSock)
 
                 if fileObj:
+
+                    # Get the size of requested file
                     curr_dir = os.getcwd() + '/' + file_name
                     req_file_size = os.path.getsize(curr_dir)
                     print 'file size: ', req_file_size, 'bytes'
+
+                    # Check for TCP buffer overflow
                     if req_file_size > 65536:
                         msg = 'server: [Errno 27] File too large.'
                         if send(msg, data_channel):
@@ -207,6 +230,8 @@ def main(port):
                             print 'response fail...\n'
                         send(msg, clientSock)
                     else:
+
+                        # Start to read and send the file to client
                         fileData = fileObj.read()
                         if send(fileData, data_channel):
                             send('server: executed successfully...', clientSock)
@@ -216,11 +241,22 @@ def main(port):
                             print 'response fail...\n'
             elif 'put' in client_cmd[:4]:
                 print 'Downloading ', file_name, '...'
+
+                # Send acknowledged packet back to client
                 send('server: ACK, prepare to receive', clientSock)
+
+                # Get ephemeral port for data connection
+                # through control connection
                 ephemeral_port = recv_from_client(clientSock)
+
+                # Connect to data channel
                 data_channel = connect_to_data_channel(client_addr[0], int(ephemeral_port))
+
+                # Receive data from client through data connection
                 data = recv_from_client(data_channel)
                 if data:
+
+                    # Create the downloaded file from received data
                     with open(file_name, 'wb') as file_to_write:
                         file_to_write.write(data)
                         send('server: executed successfully...', data_channel)
