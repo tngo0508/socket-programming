@@ -1,18 +1,24 @@
 # socket-programming
 
-Author: Thomas Ngo <br />
 Instructor: Dr. Yun Tian <br />
 California University State, Fullerton
 
+## Authors/Contributors
+
+-   **Ngo,Thomas** - _tngo0508@csu.fullerton.edu_ - [tngo0508](https://github.com/tngo0508)
+-   **Yayavaram, Sameera** - _sameera.yayavaram@csu.fullerton.edu_ - [sameera-yaya](https://github.com/sameera-yaya)
+-   **Kheradvar,Kevin** - _tngo0508@csu.fullerton.edu_
+
 ## Project Description
 
-In this assignment, I will implement (simplified) FTP server and FTP client. The client shall connect to the server and support uploading and downloading of files to/from server.
+In this assignment, we implement (simplified) FTP server and FTP client. The client shall connect to the server and support uploading and downloading of files to/from server.
 
 ## How to execute
 
 Make sure you change user permission to execute the program
 ```
-$ chmod u+x project.py
+$ chmod u+x serv.py
+$ chmod u+x cli.py
 ```
 ### server
 - Copy and paste _serv.py_ into your server's machine
