@@ -7,7 +7,7 @@ California University State, Fullerton
 
 -   **Ngo,Thomas** - _tngo0508@csu.fullerton.edu_ - [tngo0508](https://github.com/tngo0508)
 -   **Yayavaram, Sameera** - _sameera.yayavaram@csu.fullerton.edu_ - [sameera-yaya](https://github.com/sameera-yaya)
--   **Kheradvar,Kevin** - _tngo0508@csu.fullerton.edu_
+-   **Kheradvar,Kevin** - _kevinkheradvar@gmail.com_
 
 ## Project Description
 
